@@ -1,0 +1,372 @@
+/**
+ * workflow.css
+ * ---------------------------------------------------------------------------
+ * Shared styles for the Structural Change Request workflow pages (Manager's
+ * request list, HRBP/OD inboxes and review pages) — everything that isn't
+ * specific to the Admin Panel's sidebar layout (css/admin.css) or the
+ * stepped request form itself (css/create-request.css). Builds on the
+ * variables/components in style.css and reuses admin.css's data-table/
+ * modal/toast/badge classes, which are generic enough to serve both.
+ * ---------------------------------------------------------------------------
+ */
+
+/* ---------- Simple topbar shell (no sidebar) — Manager/HRBP/OD pages ---------- */
+.app-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 32px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e9f0;
+}
+
+.app-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.app-topbar-title {
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.app-topbar-user {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 13.5px;
+  color: var(--color-text-muted);
+}
+
+.app-topbar-user .btn-secondary {
+  width: auto;
+  padding: 8px 16px;
+}
+
+.app-content {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 28px 24px 48px;
+}
+
+.content-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.content-header-row .content-heading {
+  margin-bottom: 0;
+}
+
+.content-header-row .btn-primary {
+  width: auto;
+  padding: 11px 22px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.back-to-list-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  margin-bottom: 16px;
+}
+
+.back-to-list-link:hover {
+  color: var(--color-primary);
+}
+
+/* ---------- Extra badge variants (admin.css defines success / neutral) ---------- */
+.badge-info {
+  color: var(--color-primary);
+  background: rgba(47, 95, 237, 0.1);
+}
+
+.badge-warning {
+  color: #b45309;
+  background: rgba(217, 119, 6, 0.12);
+}
+
+.badge-danger {
+  color: var(--color-error);
+  background: rgba(220, 38, 38, 0.12);
+}
+
+/* ---------- Empty states ---------- */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 64px 24px;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.empty-state-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  background: #eef1f6;
+}
+
+.empty-state h3 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.empty-state p {
+  font-size: 13.5px;
+  max-width: 360px;
+}
+
+/* ---------- Skeleton loaders ---------- */
+.skeleton-row {
+  height: 16px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #eef1f6 25%, #f8f9fc 37%, #eef1f6 63%);
+  background-size: 400% 100%;
+  animation: skeleton-shimmer 1.4s ease infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+.skeleton-card {
+  background: #ffffff;
+  border: 1px solid #e5e9f0;
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ---------- Review page layout (HRBP / OD review, Manager view mode) ---------- */
+.review-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.review-meta-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 24px;
+  padding: 16px 20px;
+  background: #ffffff;
+  border: 1px solid #e5e9f0;
+  border-radius: var(--radius-md);
+  font-size: 13.5px;
+}
+
+.review-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.review-meta-item .review-meta-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-muted);
+}
+
+.review-answer-card {
+  background: #ffffff;
+  border: 1px solid #e5e9f0;
+  border-radius: var(--radius-md);
+  padding: 20px 22px;
+}
+
+.review-answer-card + .review-answer-card {
+  margin-top: 14px;
+}
+
+.review-question-text {
+  font-size: 14.5px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.review-answer-text {
+  font-size: 14px;
+  color: var(--color-text);
+  line-height: 1.55;
+  white-space: pre-wrap;
+  padding: 12px 14px;
+  background: #f5f7fa;
+  border-radius: var(--radius-md);
+  margin-bottom: 14px;
+}
+
+.verdict-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.verdict-toggle-group {
+  display: inline-flex;
+  border: 1px solid #d9dee8;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.verdict-toggle {
+  padding: 7px 16px;
+  font-size: 12.5px;
+  font-weight: 700;
+  background: #ffffff;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.verdict-toggle + .verdict-toggle {
+  border-left: 1px solid #d9dee8;
+}
+
+.verdict-toggle.verdict-sufficient.is-active {
+  background: var(--color-success);
+  color: #ffffff;
+}
+
+.verdict-toggle.verdict-insufficient.is-active {
+  background: var(--color-error);
+  color: #ffffff;
+}
+
+.verdict-readonly-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 999px;
+}
+
+.verdict-comment-field {
+  margin-top: 10px;
+}
+
+.verdict-comment-field textarea {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 13.5px;
+  font-family: inherit;
+  border: 1px solid #d9dee8;
+  border-radius: var(--radius-md);
+  resize: vertical;
+  outline: none;
+}
+
+.verdict-comment-field textarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(47, 95, 237, 0.15);
+}
+
+.prior-comment-note {
+  margin-top: 10px;
+  padding: 10px 12px;
+  font-size: 12.5px;
+  border-radius: var(--radius-md);
+  background: #fff7ed;
+  border: 1px solid rgba(217, 119, 6, 0.25);
+  color: #92400e;
+}
+
+.review-summary-card {
+  background: #ffffff;
+  border: 1px solid #e5e9f0;
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+}
+
+.review-decision-bar {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 24px;
+  margin: 20px -24px -48px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid #e5e9f0;
+}
+
+.review-decision-bar .decision-status-text {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.review-decision-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.review-decision-actions button {
+  width: auto;
+  padding: 11px 22px;
+}
+
+/* ---------- Responsive (tablet) ---------- */
+@media (max-width: 900px) {
+  .app-topbar {
+    padding: 14px 18px;
+  }
+
+  .app-content {
+    padding: 20px 16px 40px;
+  }
+
+  .review-decision-bar {
+    flex-direction: column;
+    align-items: stretch;
+    margin: 20px -16px -40px;
+  }
+
+  .review-decision-actions {
+    justify-content: stretch;
+  }
+
+  .review-decision-actions button {
+    flex: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-topbar-user span {
+    display: none;
+  }
+}

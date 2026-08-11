@@ -1,0 +1,375 @@
+/**
+ * style.css
+ * ---------------------------------------------------------------------------
+ * Global styles for the Organizational Design Tool.
+ * Covers the login page (glassmorphism card) and shared dashboard styles.
+ * ---------------------------------------------------------------------------
+ */
+
+/* ---------- Reset & base ---------- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --color-bg: #f5f7fa;
+  --color-primary: #2f5fed;
+  --color-primary-dark: #1e40c9;
+  --color-text: #1a1f36;
+  --color-text-muted: #6b7280;
+  --color-error: #dc2626;
+  --color-error-bg: #fef2f2;
+  --color-success: #16a34a;
+  --color-card-border: rgba(255, 255, 255, 0.4);
+  --radius-lg: 20px;
+  --radius-md: 12px;
+  --shadow-card: 0 20px 60px rgba(31, 45, 90, 0.12);
+  --transition-fast: 0.2s ease;
+  --transition-medium: 0.4s ease;
+}
+
+body {
+  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+  color: var(--color-text);
+  background: var(--color-bg);
+  min-height: 100vh;
+}
+
+/* ---------- Login page layout ---------- */
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(47, 95, 237, 0.08), transparent 45%),
+    radial-gradient(circle at 85% 80%, rgba(47, 95, 237, 0.06), transparent 45%),
+    #ffffff;
+}
+
+/* ---------- Glassmorphism card ---------- */
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  padding: 40px 36px;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  text-align: center;
+  animation: card-enter 0.5s ease;
+}
+
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- Logo placeholder ---------- */
+.logo-placeholder {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 20px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 0.5px;
+  box-shadow: 0 8px 20px rgba(47, 95, 237, 0.3);
+}
+
+.login-logo {
+  display: block;
+  max-width: 220px;
+  max-height: 64px;
+  width: auto;
+  height: auto;
+  margin: 0 auto 20px;
+}
+
+/* Small left-aligned logo used in dashboard/admin topbars — per standard
+   header sizing guidance (bar ~52-90px tall, logo ~20-40px tall inside),
+   left-aligned like every other left-to-right product header. */
+.topbar-logo {
+  display: block;
+  height: 28px;
+  width: auto;
+}
+
+.login-card h1 {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.login-card p.subtitle {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  margin-bottom: 28px;
+}
+
+/* ---------- Form ---------- */
+.form-group {
+  text-align: left;
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-bottom: 6px;
+}
+
+.form-group input[type="email"],
+.form-group input[type="password"],
+.form-group input[type="text"] {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 14px;
+  color: var(--color-text);
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid #d9dee8;
+  border-radius: var(--radius-md);
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.form-group input[type="email"]:focus,
+.form-group input[type="password"]:focus,
+.form-group input[type="text"]:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(47, 95, 237, 0.15);
+}
+
+/* Password field with an inline show/hide toggle icon */
+.password-field {
+  position: relative;
+}
+
+.password-field input {
+  padding-right: 44px; /* room for the toggle icon */
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: color var(--transition-fast), background var(--transition-fast);
+}
+
+.password-toggle:hover {
+  color: var(--color-text);
+  background: rgba(47, 95, 237, 0.08);
+}
+
+.password-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+.password-toggle .icon-eye-off {
+  display: none;
+}
+
+.password-toggle.is-visible .icon-eye {
+  display: none;
+}
+
+.password-toggle.is-visible .icon-eye-off {
+  display: block;
+}
+
+/* Inline, field-level validation message (below a specific input) */
+.field-error-text {
+  margin-top: 6px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--color-error);
+}
+
+/* ---------- Sign in button ---------- */
+.btn-primary {
+  position: relative;
+  width: 100%;
+  padding: 13px 16px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), opacity var(--transition-fast);
+  box-shadow: 0 10px 24px rgba(47, 95, 237, 0.28);
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(47, 95, 237, 0.34);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+/* ---------- Loading spinner ---------- */
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- Success checkmark ---------- */
+.success-check {
+  width: 20px;
+  height: 20px;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity var(--transition-medium), transform var(--transition-medium);
+}
+
+.success-check.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ---------- Error component ---------- */
+.error-message {
+  margin-top: 16px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-error);
+  background: var(--color-error-bg);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  border-radius: var(--radius-md);
+  text-align: left;
+}
+
+.shake {
+  animation: shake 0.4s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+/* ---------- Utility ---------- */
+.hidden {
+  display: none !important;
+}
+
+.footer-note {
+  margin-top: 24px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+/* ---------- Dashboard pages (Phase 1 placeholders) ---------- */
+.dashboard-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+}
+
+.dashboard-page h1 {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.dashboard-page p {
+  color: var(--color-text-muted);
+  margin-bottom: 24px;
+}
+
+.btn-secondary {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-primary);
+  background: #ffffff;
+  border: 1px solid #d9dee8;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+
+.btn-secondary:hover {
+  background: #f5f7fa;
+  transform: translateY(-1px);
+}
+
+.dashboard-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dashboard-cta {
+  width: auto;
+  padding: 12px 24px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 480px) {
+  .login-card {
+    padding: 32px 24px;
+  }
+}

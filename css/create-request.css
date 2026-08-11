@@ -1,0 +1,624 @@
+/**
+ * create-request.css
+ * ---------------------------------------------------------------------------
+ * Styles for create-request.html ("New Organization Change Request").
+ * Builds on the CSS variables defined in style.css (loaded first) —
+ * only page-specific rules live here.
+ * ---------------------------------------------------------------------------
+ */
+
+body.request-page {
+  min-height: 100vh;
+  background: #f5f7fa;
+  padding-bottom: 96px; /* clears the sticky footer */
+}
+
+/* ---------- Sticky header ---------- */
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 32px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid #e5e9f0;
+}
+
+.sticky-header .header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.logo-placeholder.small {
+  width: 40px;
+  height: 40px;
+  font-size: 15px;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.sticky-header h1 {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.header-subtitle {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+/* ---------- Progress indicator ---------- */
+.progress-track {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px 24px 4px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.progress-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.progress-step .step-dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  background: #e5e9f0;
+  color: var(--color-text-muted);
+  transition: background var(--transition-medium), color var(--transition-medium);
+}
+
+.progress-step.active .step-dot {
+  background: var(--color-primary);
+  color: #ffffff;
+}
+
+.progress-step.completed .step-dot {
+  background: var(--color-success);
+  color: #ffffff;
+}
+
+.progress-step.active,
+.progress-step.completed {
+  color: var(--color-text);
+}
+
+.progress-connector {
+  width: 32px;
+  height: 2px;
+  background: #e5e9f0;
+}
+
+/* ---------- Main layout ---------- */
+.request-main {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 24px 24px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid #e5e9f0;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 28px 28px 32px;
+  animation: card-enter 0.4s ease;
+}
+
+.card h2 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.section-subtitle {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  margin-bottom: 18px;
+}
+
+/* ---------- Manager Information (read-only) ---------- */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px 20px;
+  margin-top: 16px;
+}
+
+.info-field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.info-field input {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: var(--color-text);
+  background: #f5f7fa;
+  border: 1px solid #e5e9f0;
+  border-radius: var(--radius-md);
+  cursor: not-allowed;
+}
+
+/* ---------- Category selector ---------- */
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.category-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  text-align: left;
+  padding: 20px;
+  background: #ffffff;
+  border: 1.5px solid #e5e9f0;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+  font-family: inherit;
+}
+
+.category-card:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(47, 95, 237, 0.1);
+}
+
+.category-card.selected {
+  border-color: var(--color-primary);
+  background: rgba(47, 95, 237, 0.05);
+  box-shadow: 0 10px 24px rgba(47, 95, 237, 0.16);
+}
+
+.category-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+}
+
+.category-card h3 {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.category-card p {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+/* ---------- Dynamic questions ---------- */
+#questions-section {
+  animation: card-enter 0.4s ease;
+}
+
+.questions-placeholder {
+  padding: 20px;
+  border-radius: var(--radius-md);
+  background: #f5f7fa;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+.question-field {
+  padding: 18px 0;
+  border-bottom: 1px solid #eef1f6;
+}
+
+.question-field:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.question-label {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.question-field.field-error .question-label {
+  color: var(--color-error);
+}
+
+.checkbox-group,
+.yes-no-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+}
+
+.checkbox-option,
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.checkbox-option input,
+.radio-option input {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+.question-textarea,
+.question-text-input {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--color-text);
+  background: #ffffff;
+  border: 1px solid #d9dee8;
+  border-radius: var(--radius-md);
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.question-textarea:focus,
+.question-text-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(47, 95, 237, 0.15);
+}
+
+.question-textarea {
+  resize: vertical;
+}
+
+/* ---------- Searchable dropdown (predefined options above a textarea) ---------- */
+.searchable-dropdown {
+  position: relative;
+  margin-bottom: 10px;
+}
+
+.searchable-dropdown-input {
+  width: 100%;
+  padding: 11px 13px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--color-text);
+  background: #ffffff;
+  border: 1px solid #d9dee8;
+  border-radius: var(--radius-md);
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.searchable-dropdown-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(47, 95, 237, 0.15);
+}
+
+.searchable-dropdown-list {
+  position: absolute;
+  z-index: 15;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: #ffffff;
+  border: 1px solid #d9dee8;
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgba(20, 30, 60, 0.12);
+}
+
+.searchable-dropdown-list.hidden {
+  display: none;
+}
+
+.searchable-dropdown-option {
+  padding: 9px 10px;
+  font-size: 13.5px;
+  color: var(--color-text);
+  border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+}
+
+.searchable-dropdown-option:hover {
+  background: #f0f4ff;
+  color: var(--color-primary);
+}
+
+.searchable-dropdown-empty {
+  padding: 9px 10px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.error-text {
+  margin-top: 8px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--color-error);
+}
+
+/* ---------- Sticky footer actions ---------- */
+.sticky-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 32px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid #e5e9f0;
+}
+
+#draft-status {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  flex: 1;
+}
+
+#draft-status.banner-error {
+  color: var(--color-error);
+  font-weight: 500;
+}
+
+.footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.footer-actions .btn-primary,
+.footer-actions .btn-secondary,
+.footer-actions .btn-tertiary {
+  width: auto;
+  padding: 11px 22px;
+}
+
+.btn-tertiary {
+  padding: 11px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.btn-tertiary:hover {
+  color: var(--color-text);
+}
+
+/* ---------- Business Justification form (Step 1, Section 2) ---------- */
+.justification-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 16px;
+}
+
+.justification-form .form-group {
+  margin-bottom: 0;
+}
+
+.form-field-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+}
+
+.field-select {
+  width: 100%;
+  padding: 11px 13px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--color-text);
+  background: #ffffff;
+  border: 1px solid #d9dee8;
+  border-radius: var(--radius-md);
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.field-select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(47, 95, 237, 0.15);
+}
+
+.justification-form .form-group label,
+.form-field-row .form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-bottom: 6px;
+}
+
+/* ---------- Question hints (muted helper bullets below a textarea) ---------- */
+.question-hints {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+}
+
+.question-hints li {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  background: #f5f7fa;
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+
+.question-hints li::before {
+  content: "· ";
+}
+
+.char-count {
+  margin-top: 6px;
+  font-size: 11.5px;
+  color: var(--color-text-muted);
+  text-align: right;
+}
+
+.char-count.char-count-ok {
+  color: var(--color-success);
+}
+
+/* ---------- Review step (Step 3) read-only summary ---------- */
+.review-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-muted);
+  margin: 22px 0 12px;
+}
+
+.review-section-title:first-child {
+  margin-top: 0;
+}
+
+.readonly-value {
+  font-size: 14px;
+  color: var(--color-text);
+  padding-top: 2px;
+}
+
+.readonly-paragraph {
+  margin-bottom: 16px;
+}
+
+.readonly-paragraph:last-child {
+  margin-bottom: 0;
+}
+
+.readonly-paragraph-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-muted);
+  margin-bottom: 6px;
+}
+
+.readonly-paragraph-value {
+  font-size: 14px;
+  color: var(--color-text);
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+/* ---------- Approval trail (history) ---------- */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.history-row {
+  padding-bottom: 14px;
+  border-bottom: 1px solid #eef1f6;
+}
+
+.history-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.history-row p {
+  font-size: 13.5px;
+  color: var(--color-text);
+}
+
+.history-time {
+  display: block;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.history-comment {
+  margin-top: 6px;
+  font-size: 13px;
+  font-style: italic;
+  color: var(--color-text-muted);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 640px) {
+  .sticky-header {
+    padding: 14px 16px;
+  }
+
+  .request-main {
+    padding: 16px 16px 32px;
+  }
+
+  .card {
+    padding: 20px;
+  }
+
+  .sticky-footer {
+    padding: 12px 16px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .footer-actions {
+    justify-content: stretch;
+  }
+
+  .footer-actions button,
+  .footer-actions .btn-tertiary {
+    flex: 1;
+  }
+}

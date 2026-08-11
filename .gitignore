@@ -1,0 +1,13 @@
+# Real employee PII (156 names/emails/job titles) — never publish this to a
+# public repo. Was only ever needed locally by bulk-import-managers.html for
+# the one-time import; the app itself doesn't read it at runtime.
+managers_import_data.json
+
+# Claude Code local session state — machine-specific, not meant to be shared.
+.claude/settings.local.json
+
+# OS/editor cruft
+.DS_Store
+Thumbs.db
+__pycache__/
+*.pyc
