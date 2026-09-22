@@ -131,6 +131,21 @@ async function listActiveHrbps() {
   return data || [];
 }
 
+/**
+ * PostgREST .or() filter part that matches a search string against the
+ * human-friendly request number: "REQ-0007", "req7" and "7" all match
+ * request 7. Non-numeric text matches no request number — the
+ * "request_number.lt.0" part is always false, and is only there so the
+ * caller's .or() list is never empty.
+ *
+ * @param {string} escaped the already-escaped search text
+ * @returns {string[]}
+ */
+function requestNumberSearchParts(escaped) {
+  const digits = escaped.replace(/^req[-\s]*/i, "");
+  return /^\d+$/.test(digits) ? ["request_number.eq." + Number(digits)] : ["request_number.lt.0"];
+}
+
 // =============================================================================
 // Manager: my requests
 // =============================================================================
@@ -151,7 +166,7 @@ async function listMyRequests(options) {
   const search = (opts.search || "").trim();
   if (search) {
     const escaped = search.replace(/[%,]/g, "");
-    const orParts = ["id.ilike.%" + escaped + "%"].concat(
+    const orParts = requestNumberSearchParts(escaped).concat(
       categoryKeysMatchingSearch(escaped).map((key) => "category.eq." + key)
     );
     query = query.or(orParts.join(","));
@@ -188,16 +203,28 @@ async function getRequestById(id) {
   if (error) throw new Error(error.message);
   if (!request) throw new Error("This request could not be found.");
 
-  const [answersResult, historyResult] = await Promise.all([
+  const [answersResult, historyResult, verdictHistoryResult] = await Promise.all([
     supabaseClient.from("request_answers").select("*").eq("request_id", id).order("sort_order", { ascending: true }),
     supabaseClient.from("request_history").select("*").eq("request_id", id).order("created_at", { ascending: true }),
+    supabaseClient
+      .from("hrbp_verdict_history")
+      .select("*")
+      .eq("request_id", id)
+      .order("review_round", { ascending: true })
+      .order("sort_order", { ascending: true }),
   ]);
   if (answersResult.error) throw new Error(answersResult.error.message);
   if (historyResult.error) throw new Error(historyResult.error.message);
+  // The HRBP-decision history is supplementary: if it can't be read (e.g. the
+  // table hasn't been created yet) the request itself must still open.
+  if (verdictHistoryResult.error) console.warn("HRBP decision history unavailable:", verdictHistoryResult.error.message);
+  const verdictRows = verdictHistoryResult.error ? [] : verdictHistoryResult.data || [];
 
   const history = historyResult.data || [];
   const nameById = await resolveUserNames(
-    [request.requester_id, request.assigned_hrbp_id].concat(history.map((entry) => entry.actor_id))
+    [request.requester_id, request.assigned_hrbp_id]
+      .concat(history.map((entry) => entry.actor_id))
+      .concat(verdictRows.map((row) => row.hrbp_id))
   );
 
   const resolvedHistory = history.map((entry) =>
@@ -207,7 +234,33 @@ async function getRequestById(id) {
   return Object.assign(withResolvedNames(request, nameById), {
     answers: answersResult.data || [],
     history: resolvedHistory,
+    verdict_history: groupVerdictHistory(verdictRows, nameById),
   });
+}
+
+/**
+ * Groups hrbp_verdict_history rows (one row per answer an HRBP marked
+ * insufficient) into review rounds, oldest first.
+ *
+ * @param {Array<object>} rows
+ * @param {Map<string, string>} nameById
+ * @returns {Array<{round: number, hrbp_name: string, outcome: string, created_at: string, items: object[]}>}
+ */
+function groupVerdictHistory(rows, nameById) {
+  const rounds = new Map();
+  rows.forEach((row) => {
+    if (!rounds.has(row.review_round)) {
+      rounds.set(row.review_round, {
+        round: row.review_round,
+        hrbp_name: nameById.get(row.hrbp_id) || "—",
+        outcome: row.outcome,
+        created_at: row.created_at,
+        items: [],
+      });
+    }
+    rounds.get(row.review_round).items.push(row);
+  });
+  return Array.from(rounds.values());
 }
 
 /**
@@ -313,9 +366,9 @@ async function listHrbpInbox(options) {
   const search = (opts.search || "").trim();
   if (search) {
     const escaped = search.replace(/[%,]/g, "");
-    const orParts = ["id.ilike.%" + escaped + "%", "requester_full_name.ilike.%" + escaped + "%"].concat(
-      categoryKeysMatchingSearch(escaped).map((key) => "category.eq." + key)
-    );
+    const orParts = requestNumberSearchParts(escaped)
+      .concat(["requester_full_name.ilike.%" + escaped + "%"])
+      .concat(categoryKeysMatchingSearch(escaped).map((key) => "category.eq." + key));
     query = query.or(orParts.join(","));
   }
 
@@ -394,9 +447,9 @@ async function listOdInbox(options) {
   const search = (opts.search || "").trim();
   if (search) {
     const escaped = search.replace(/[%,]/g, "");
-    const orParts = ["id.ilike.%" + escaped + "%", "requester_full_name.ilike.%" + escaped + "%"].concat(
-      categoryKeysMatchingSearch(escaped).map((key) => "category.eq." + key)
-    );
+    const orParts = requestNumberSearchParts(escaped)
+      .concat(["requester_full_name.ilike.%" + escaped + "%"])
+      .concat(categoryKeysMatchingSearch(escaped).map((key) => "category.eq." + key));
     query = query.or(orParts.join(","));
   }
 

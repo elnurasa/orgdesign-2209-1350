@@ -81,10 +81,15 @@ function renderInteractiveReview() {
 
   const detailsCard = document.createElement("section");
   detailsCard.className = "card";
-  detailsCard.appendChild(buildReviewSectionTitle("Business Justification"));
+  detailsCard.appendChild(buildReviewSectionTitle("Business Reason"));
   detailsCard.appendChild(buildReadOnlyParagraph("Change Description", request.change_description));
-  detailsCard.appendChild(buildReadOnlyParagraph("Justification", request.justification));
+  detailsCard.appendChild(buildReadOnlyParagraph("Reason", request.justification));
   main.appendChild(detailsCard);
+
+  // Everything the HRBP marked insufficient in earlier rounds — right above
+  // the answers so OD sees what was challenged (and fixed) before reviewing.
+  const verdictHistoryCard = buildVerdictHistoryCard(request.verdict_history);
+  if (verdictHistoryCard) main.appendChild(verdictHistoryCard);
 
   const answersCard = document.createElement("section");
   answersCard.className = "card";
@@ -120,7 +125,7 @@ function buildInteractiveAnswerCard(answer) {
 
   const answerText = document.createElement("p");
   answerText.className = "review-answer-text";
-  answerText.textContent = answer.answer || "—";
+  fillAnswerContent(answerText, answer);
   card.appendChild(answerText);
 
   if (answer.hrbp_verdict) {
@@ -326,6 +331,9 @@ function renderReadOnlyReview() {
 
   main.appendChild(buildReviewMetaBar(request));
 
+  const verdictHistoryCard = buildVerdictHistoryCard(request.verdict_history);
+  if (verdictHistoryCard) main.appendChild(verdictHistoryCard);
+
   const answersCard = document.createElement("section");
   answersCard.className = "card";
   answersCard.appendChild(buildReviewSectionTitle("Questions & Answers"));
@@ -337,7 +345,7 @@ function renderReadOnlyReview() {
     questionText.textContent = answer.question_text;
     const answerText = document.createElement("p");
     answerText.className = "review-answer-text";
-    answerText.textContent = answer.answer || "—";
+    fillAnswerContent(answerText, answer);
     card.appendChild(questionText);
     card.appendChild(answerText);
     if (answer.hrbp_verdict) card.appendChild(buildReadOnlyVerdictRow("HRBP", answer.hrbp_verdict, answer.hrbp_comment));

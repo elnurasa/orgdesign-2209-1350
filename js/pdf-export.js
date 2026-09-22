@@ -49,19 +49,19 @@ function exportRequestToPdf(request) {
     ["Subunit", request.requester_profile ? request.requester_profile.subunit : ""],
   ]);
 
-  drawKeyValueSection(ctx, "Business Justification", [
+  drawKeyValueSection(ctx, "Business Reason", [
     ["Category", CATEGORY_LABELS[request.category] || request.category],
     ["Requested Effective Date", request.requested_effective_date || "—"],
     ["Assigned HRBP", request.hrbp_name],
   ]);
   drawWrappedParagraph(ctx, "Change Description", request.change_description);
-  drawWrappedParagraph(ctx, "Justification", request.justification);
+  drawWrappedParagraph(ctx, "Reason", request.justification);
 
   drawQuestionsTable(ctx, request.answers);
   drawApprovalTrail(ctx, request.history);
   drawFooters(ctx);
 
-  const fileName = `structural-change-request-${request.id}.pdf`;
+  const fileName = `structural-change-request-${formatRequestNumber(request)}.pdf`;
   doc.save(fileName);
   showSuccessToast("PDF downloaded.");
 }
@@ -97,7 +97,7 @@ function drawHeader(ctx, request) {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9.5);
   doc.setTextColor.apply(doc, PDF_MUTED_RGB);
-  doc.text(`Request ID: ${request.id}    Generated: ${new Date().toLocaleDateString()}`, PDF_MARGIN + 46, ctx.y + 29);
+  doc.text(`Request ID: ${formatRequestNumber(request)}    Generated: ${new Date().toLocaleDateString()}`, PDF_MARGIN + 46, ctx.y + 29);
 
   ctx.y += 54;
   doc.setDrawColor(229, 233, 240);
@@ -184,7 +184,7 @@ function drawQuestionsTable(ctx, answers) {
 
   answers.forEach((answer, index) => {
     const questionLines = doc.splitTextToSize(answer.question_text, columns[1].width - 8);
-    const answerLines = doc.splitTextToSize(answer.answer || "—", columns[2].width - 8);
+    const answerLines = doc.splitTextToSize(formatAnswerPlainText(answer), columns[2].width - 8);
     const rowLines = Math.max(questionLines.length, answerLines.length, 1);
     const rowHeight = rowLines * 11 + 10;
 

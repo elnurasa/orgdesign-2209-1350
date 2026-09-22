@@ -5,8 +5,8 @@
  * request list, HRBP/OD inboxes and review pages) — everything that isn't
  * specific to the Admin Panel's sidebar layout (css/admin.css) or the
  * stepped request form itself (css/create-request.css). Builds on the
- * variables/components in style.css and reuses admin.css's data-table/
- * modal/toast/badge classes, which are generic enough to serve both.
+ * tokens in style.css and reuses admin.css's data-table/modal/toast/badge
+ * classes, which are generic enough to serve both.
  * ---------------------------------------------------------------------------
  */
 
@@ -18,20 +18,37 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 32px;
-  background: #ffffff;
-  border-bottom: 1px solid #e5e9f0;
+  padding: 15px 32px;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* Brand gradient hairline along the very top edge */
+.app-topbar::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--brand-gradient);
 }
 
 .app-topbar-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .app-topbar-title {
+  padding-left: 14px;
   font-weight: 700;
   font-size: 15px;
+  letter-spacing: -0.005em;
+  color: var(--brand-navy);
+  border-left: 1px solid var(--color-border-strong);
 }
 
 .app-topbar-user {
@@ -42,15 +59,20 @@
   color: var(--color-text-muted);
 }
 
+.app-topbar-user strong {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
 .app-topbar-user .btn-secondary {
   width: auto;
   padding: 8px 16px;
 }
 
 .app-content {
-  max-width: 1080px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 28px 24px 48px;
+  padding: 36px 32px 56px;
 }
 
 .content-header-row {
@@ -58,7 +80,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 20px;
+  margin-bottom: 22px;
   flex-wrap: wrap;
 }
 
@@ -80,30 +102,18 @@
   gap: 6px;
   font-size: 13.5px;
   font-weight: 600;
-  color: var(--color-text-muted);
+  color: var(--brand-navy);
   text-decoration: none;
   margin-bottom: 16px;
 }
 
 .back-to-list-link:hover {
-  color: var(--color-primary);
+  color: var(--brand-navy-dark);
+  text-decoration: underline;
 }
 
-/* ---------- Extra badge variants (admin.css defines success / neutral) ---------- */
-.badge-info {
-  color: var(--color-primary);
-  background: rgba(47, 95, 237, 0.1);
-}
-
-.badge-warning {
-  color: #b45309;
-  background: rgba(217, 119, 6, 0.12);
-}
-
-.badge-danger {
-  color: var(--color-error);
-  background: rgba(220, 38, 38, 0.12);
-}
+/* Badge variants (info / warning / danger) live in admin.css beside the
+   base .badge so every page — including the Admin Panel — shares them. */
 
 /* ---------- Empty states ---------- */
 .empty-state {
@@ -118,32 +128,33 @@
 }
 
 .empty-state-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 16px;
+  width: 60px;
+  height: 60px;
+  border-radius: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 26px;
-  background: #eef1f6;
+  background: var(--navy-50);
+  border: 1px solid var(--navy-100);
 }
 
 .empty-state h3 {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--color-text);
 }
 
 .empty-state p {
-  font-size: 13.5px;
-  max-width: 360px;
+  font-size: 14px;
+  max-width: 380px;
 }
 
 /* ---------- Skeleton loaders ---------- */
 .skeleton-row {
   height: 16px;
   border-radius: 6px;
-  background: linear-gradient(90deg, #eef1f6 25%, #f8f9fc 37%, #eef1f6 63%);
+  background: linear-gradient(90deg, #e8eef5 25%, #f6f9fc 37%, #e8eef5 63%);
   background-size: 400% 100%;
   animation: skeleton-shimmer 1.4s ease infinite;
 }
@@ -155,52 +166,56 @@
 
 .skeleton-card {
   background: #ffffff;
-  border: 1px solid #e5e9f0;
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: 24px;
+  box-shadow: var(--shadow-card);
+  padding: 26px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
 /* ---------- Review page layout (HRBP / OD review, Manager view mode) ---------- */
 .review-layout {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 22px;
 }
 
 .review-meta-bar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px 24px;
-  padding: 16px 20px;
+  gap: 12px 32px;
+  padding: 18px 24px;
   background: #ffffff;
-  border: 1px solid #e5e9f0;
-  border-radius: var(--radius-md);
-  font-size: 13.5px;
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--brand-navy);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  font-size: 14px;
 }
 
 .review-meta-item {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
 
 .review-meta-item .review-meta-label {
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.07em;
   color: var(--color-text-muted);
 }
 
 .review-answer-card {
   background: #ffffff;
-  border: 1px solid #e5e9f0;
-  border-radius: var(--radius-md);
-  padding: 20px 22px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  padding: 22px 24px;
 }
 
 .review-answer-card + .review-answer-card {
@@ -208,20 +223,109 @@
 }
 
 .review-question-text {
-  font-size: 14.5px;
+  font-size: 15px;
   font-weight: 600;
-  margin-bottom: 10px;
+  line-height: 1.45;
+  color: var(--color-text);
+  margin-bottom: 12px;
 }
 
 .review-answer-text {
-  font-size: 14px;
+  font-size: 14.5px;
   color: var(--color-text);
-  line-height: 1.55;
+  line-height: 1.6;
   white-space: pre-wrap;
-  padding: 12px 14px;
-  background: #f5f7fa;
+  padding: 13px 16px;
+  background: #f5f8fc;
+  border: 1px solid #e6edf5;
   border-radius: var(--radius-md);
-  margin-bottom: 14px;
+  margin-bottom: 16px;
+}
+
+/* ---------- Selected-option chips (request form picker + every read-only
+   place an answer is shown: review step, view mode, HRBP/OD review) ---------- */
+.option-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 6px 5px 12px;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--brand-navy);
+  background: #ffffff;
+  border: 1px solid var(--navy-200);
+  border-radius: 999px;
+  box-shadow: 0 1px 2px rgba(4, 32, 64, 0.06);
+}
+
+.option-chip-readonly {
+  padding: 5px 12px;
+  background: var(--navy-50);
+  box-shadow: none;
+}
+
+.answer-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.answer-chips:last-child {
+  margin-bottom: 0;
+}
+
+.answer-description {
+  display: block;
+}
+
+/* ---------- HRBP Review History (insufficient decisions from earlier rounds) ---------- */
+.verdict-round {
+  margin-top: 16px;
+  border: 1px solid rgba(217, 119, 6, 0.3);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.verdict-round-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 12px 18px;
+  background: #fff8ec;
+  border-bottom: 1px solid rgba(217, 119, 6, 0.25);
+}
+
+.verdict-round-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #7c3a06;
+}
+
+.verdict-round-meta {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.verdict-history-item {
+  padding: 18px 20px;
+}
+
+.verdict-history-item + .verdict-history-item {
+  border-top: 1px solid #edf1f6;
+}
+
+.verdict-history-item .review-answer-text {
+  margin-bottom: 12px;
+}
+
+.verdict-history-item .verdict-row {
+  margin-bottom: 0;
 }
 
 .verdict-row {
@@ -234,15 +338,17 @@
 
 .verdict-toggle-group {
   display: inline-flex;
-  border: 1px solid #d9dee8;
+  border: 1px solid var(--color-border-strong);
   border-radius: 999px;
   overflow: hidden;
+  background: #ffffff;
 }
 
 .verdict-toggle {
-  padding: 7px 16px;
-  font-size: 12.5px;
-  font-weight: 700;
+  padding: 8px 18px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
   background: #ffffff;
   border: none;
   cursor: pointer;
@@ -250,8 +356,13 @@
   transition: background var(--transition-fast), color var(--transition-fast);
 }
 
+.verdict-toggle:hover {
+  background: var(--navy-50);
+  color: var(--color-text);
+}
+
 .verdict-toggle + .verdict-toggle {
-  border-left: 1px solid #d9dee8;
+  border-left: 1px solid var(--color-border-strong);
 }
 
 .verdict-toggle.verdict-sufficient.is-active {
@@ -268,9 +379,9 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
-  font-weight: 700;
-  padding: 5px 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 5px 13px;
   border-radius: 999px;
 }
 
@@ -280,35 +391,40 @@
 
 .verdict-comment-field textarea {
   width: 100%;
-  padding: 10px 12px;
-  font-size: 13.5px;
+  padding: 11px 14px;
+  font-size: 14px;
   font-family: inherit;
-  border: 1px solid #d9dee8;
+  line-height: 1.5;
+  color: var(--color-text);
+  border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-md);
   resize: vertical;
   outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .verdict-comment-field textarea:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(47, 95, 237, 0.15);
+  border-color: var(--brand-navy);
+  box-shadow: var(--focus-ring);
 }
 
 .prior-comment-note {
   margin-top: 10px;
-  padding: 10px 12px;
-  font-size: 12.5px;
+  padding: 11px 14px;
+  font-size: 13.5px;
   border-radius: var(--radius-md);
-  background: #fff7ed;
-  border: 1px solid rgba(217, 119, 6, 0.25);
-  color: #92400e;
+  background: #fff8ec;
+  border: 1px solid rgba(217, 119, 6, 0.28);
+  border-left: 3px solid #d97706;
+  color: #7c3a06;
 }
 
 .review-summary-card {
   background: #ffffff;
-  border: 1px solid #e5e9f0;
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: 20px 24px;
+  box-shadow: var(--shadow-card);
+  padding: 22px 26px;
 }
 
 .review-decision-bar {
@@ -318,15 +434,17 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 16px 24px;
-  margin: 20px -24px -48px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border-top: 1px solid #e5e9f0;
+  padding: 16px 32px;
+  margin: 22px -32px -56px;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--color-border);
+  box-shadow: 0 -8px 24px -12px rgba(4, 32, 64, 0.12);
 }
 
 .review-decision-bar .decision-status-text {
-  font-size: 13px;
+  font-size: 13.5px;
   color: var(--color-text-muted);
 }
 
@@ -343,17 +461,18 @@
 /* ---------- Responsive (tablet) ---------- */
 @media (max-width: 900px) {
   .app-topbar {
-    padding: 14px 18px;
+    padding: 13px 18px;
   }
 
   .app-content {
-    padding: 20px 16px 40px;
+    padding: 22px 16px 40px;
   }
 
   .review-decision-bar {
     flex-direction: column;
     align-items: stretch;
-    margin: 20px -16px -40px;
+    margin: 22px -16px -40px;
+    padding: 14px 16px;
   }
 
   .review-decision-actions {
@@ -362,6 +481,12 @@
 
   .review-decision-actions button {
     flex: 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-topbar-title {
+    display: none;
   }
 }
 

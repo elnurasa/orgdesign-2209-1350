@@ -89,9 +89,9 @@ function renderInteractiveReview() {
 
   const detailsCard = document.createElement("section");
   detailsCard.className = "card";
-  detailsCard.appendChild(buildReviewSectionTitle("Business Justification"));
+  detailsCard.appendChild(buildReviewSectionTitle("Business Reason"));
   detailsCard.appendChild(buildReadOnlyParagraph("Change Description", request.change_description));
-  detailsCard.appendChild(buildReadOnlyParagraph("Justification", request.justification));
+  detailsCard.appendChild(buildReadOnlyParagraph("Reason", request.justification));
   main.appendChild(detailsCard);
 
   const answersCard = document.createElement("section");
@@ -146,7 +146,7 @@ function buildInteractiveAnswerCard(answer) {
 
   const answerText = document.createElement("p");
   answerText.className = "review-answer-text";
-  answerText.textContent = answer.answer || "—";
+  fillAnswerContent(answerText, answer);
   card.appendChild(answerText);
 
   if (answer.od_verdict) {
@@ -355,7 +355,7 @@ function renderReadOnlyReview() {
     questionText.textContent = answer.question_text;
     const answerText = document.createElement("p");
     answerText.className = "review-answer-text";
-    answerText.textContent = answer.answer || "—";
+    fillAnswerContent(answerText, answer);
     card.appendChild(questionText);
     card.appendChild(answerText);
     if (answer.hrbp_verdict) card.appendChild(buildReadOnlyVerdictRow("HRBP", answer.hrbp_verdict, answer.hrbp_comment));
@@ -363,6 +363,9 @@ function renderReadOnlyReview() {
     answersCard.appendChild(card);
   });
   main.appendChild(answersCard);
+
+  const verdictHistoryCard = buildVerdictHistoryCard(request.verdict_history);
+  if (verdictHistoryCard) main.appendChild(verdictHistoryCard);
 
   main.appendChild(buildApprovalTrailCard(request.history));
 

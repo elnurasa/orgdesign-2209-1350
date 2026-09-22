@@ -6,9 +6,12 @@
  * the category selector and the question set for whichever category is
  * selected — no category-specific logic lives outside this file.
  *
- * Each question renders as one required textarea (min 30 characters); its
- * `hints` are shown as muted helper bullet points below the textarea, not
- * as separate fields.
+ * Each question renders as a free-text description textarea. A question that
+ * also has `hints` offers them as predefined options: a searchable multi-
+ * select dropdown, a field showing the selected options as chips, then the
+ * description textarea (see buildOptionPicker() in js/workflow-shared.js).
+ * The selected options are stored separately from the description
+ * (request_answers.selected_options).
  * ---------------------------------------------------------------------------
  */
 
@@ -65,38 +68,42 @@ const MANAGER_STATUS_LABELS = Object.assign({}, STATUS_LABELS, {
   returned_to_requester: "Returned to You",
 });
 
+// One distinct colour per lifecycle stage (see the badge-* rules in
+// css/admin.css right after .badge-danger) — not grouped by outcome
+// category, so e.g. "Submitted" and "HRBP Review" no longer share the same
+// blue badge.
 const STATUS_BADGE_VARIANT = {
-  draft: "neutral",
-  submitted: "info",
-  hrbp_review: "info",
-  returned_to_requester: "warning",
-  od_review: "info",
-  returned_to_hrbp: "warning",
+  draft: "draft",
+  submitted: "submitted",
+  hrbp_review: "hrbp-review",
+  returned_to_requester: "returned-requester",
+  od_review: "od-review",
+  returned_to_hrbp: "returned-hrbp",
   approved: "success",
   rejected: "danger",
-  withdrawn: "neutral",
+  withdrawn: "withdrawn",
 };
 
 const QUESTION_BANK = {
   new_department: [
-    { key: "nd_business_need", text: "What business need or strategic objective requires establishing a new department?", hints: ["company's long-term strategy", "efficient value creation", "revenue impact", "increase productivity"] },
-    { key: "nd_alternatives", text: "Have non-headcount alternatives been considered?", hints: ["process simplification", "automation", "outsourcing", "redistribution of work"] },
+    { key: "nd_business_need", text: "What business need or strategic objective requires establishing a new department?", hints: ["Company's long-term strategy", "Efficient value creation", "Revenue impact", "Increase productivity"] },
+    { key: "nd_alternatives", text: "Have non-headcount alternatives been considered?", hints: ["Process simplification", "Automation", "Outsourcing", "Redistribution of work"] },
     { key: "nd_overlaps", text: "Have potential overlaps or duplications with existing departments been assessed?", hints: [] },
-    { key: "nd_risks", text: "What risks would arise if this department were not established?", hints: ["business", "legal", "financial", "operational", "reputational impact"] },
+    { key: "nd_risks", text: "What risks would arise if this department were not established?", hints: ["Business", "Legal", "Financial", "Operational", "Reputational impact"] },
     { key: "nd_leadership", text: "Does the proposed department require dedicated leadership, governance and decision-making authority?", hints: [] },
   ],
   new_unit: [
     { key: "nu_operational_need", text: "What operational need or workload justifies establishing a new unit?", hints: [] },
     { key: "nu_existing_structure", text: "Why can't these responsibilities continue within the existing unit structure?", hints: [] },
-    { key: "nu_improvements", text: "What are the improvement areas of the new unit?", hints: ["scope of responsibility", "accountability", "service quality"] },
-    { key: "nu_alternatives", text: "Have non-headcount alternatives been considered?", hints: ["process redesign", "automation", "redistribution of work"] },
+    { key: "nu_improvements", text: "What are the improvement areas of the new unit?", hints: ["Scope of responsibility", "Accountability", "Service quality"] },
+    { key: "nu_alternatives", text: "Have non-headcount alternatives been considered?", hints: ["Process redesign", "Automation", "Redistribution of work"] },
     { key: "nu_overlaps", text: "Have potential overlaps or duplication with existing units been assessed?", hints: [] },
     { key: "nu_span_of_control", text: "Does the current manager's span of control justify creating a separate unit?", hints: [] },
     { key: "nu_risks", text: "What operational risks would arise if the unit were not established?", hints: [] },
     { key: "nu_measurable", text: "What measurable operational improvements are expected after the unit is established?", hints: [] },
   ],
   new_position: [
-    { key: "np_alternatives", text: "Have non-headcount options been considered before creating this position?", hints: ["simplifying", "automating", "outsourcing", "reallocating"] },
+    { key: "np_alternatives", text: "Have non-headcount options been considered before creating this position?", hints: ["Simplifying", "Automating", "Outsourcing", "Reallocating"] },
     { key: "np_new_accountabilities", text: "Does the position introduce new or expanded accountabilities that cannot be assigned to existing roles?", hints: [] },
     { key: "np_differentiation", text: "Are the responsibilities and decision rights clearly differentiated from existing positions?", hints: [] },
     { key: "np_longevity", text: "Is the proposed position expected to remain necessary for at least the next strategy year based on business plans and projected workload?", hints: [] },
@@ -106,7 +113,7 @@ const QUESTION_BANK = {
   reporting_line_change: [
     { key: "rl_span", text: "Will the proposed reporting line improve managerial effectiveness and maintain an appropriate span of control?", hints: [] },
     { key: "rl_alignment", text: "Does the proposed reporting relationship align with where strategic decisions, resources, and accountability are managed?", hints: [] },
-    { key: "rl_business_need", text: "Is there a clear business need for the proposed change?", hints: ["reporting line", "parent structure or ownership", "improved accountability", "efficiency", "governance", "service", "business alignment"] },
+    { key: "rl_business_need", text: "Is there a clear business need for the proposed change?", hints: ["Reporting line", "Parent structure or ownership", "Improved accountability", "Efficiency", "Governance", "Service", "Business alignment"] },
   ],
   closure_removal: [
     { key: "cr_reason", text: "Why is the position/unit/department no longer required due to changes in business model, strategy, workload, or operating structure?", hints: [] },
@@ -116,7 +123,7 @@ const QUESTION_BANK = {
   ],
   merge_split: [
     { key: "ms_reason", text: "Is there a clearly identified business reason that requires merging or splitting this position, unit, or department?", hints: [] },
-    { key: "ms_improvements", text: "Will the proposed merge or split result in measurable improvements?", hints: ["accountability", "efficiency", "service quality", "cost optimization", "business performance"] },
+    { key: "ms_improvements", text: "Will the proposed merge or split result in measurable improvements?", hints: ["Accountability", "Efficiency", "Service quality", "Cost optimization", "Business performance"] },
     { key: "ms_handoffs", text: "Have handoffs and dependencies between teams been reviewed to avoid new silos or coordination issues?", hints: [] },
   ],
   name_change: [

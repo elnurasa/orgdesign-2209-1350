@@ -267,10 +267,18 @@ function createDataTable(containerEl, options) {
         const value = options.renderCell ? options.renderCell(row, column) : row[column.key];
 
         if (value && typeof value === "object" && "badge" in value) {
-          const badge = document.createElement("span");
-          badge.className = "badge badge-" + value.badge;
-          badge.textContent = value.text;
-          td.appendChild(badge);
+          // buildBadgeCell (js/workflow-shared.js) adds the small secondary
+          // tag a status cell can carry (see buildStatusCellValue); it isn't
+          // loaded on admin.html, which never needs that, so fall back to a
+          // single plain badge there.
+          if (typeof buildBadgeCell === "function") {
+            td.appendChild(buildBadgeCell(value));
+          } else {
+            const badge = document.createElement("span");
+            badge.className = "badge badge-" + value.badge;
+            badge.textContent = value.text;
+            td.appendChild(badge);
+          }
         } else {
           td.textContent = value === null || value === undefined || value === "" ? "—" : String(value);
         }

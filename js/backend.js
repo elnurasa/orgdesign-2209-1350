@@ -1,28 +1,19 @@
 /**
- * google.js  (drop-in replacement — the file name is now historical)
+ * backend.js
  * ---------------------------------------------------------------------------
  * The app's ONLY channel to the privileged backend — the Supabase Edge
  * Function `admin-api` (supabase/functions/admin-api/index.ts), which holds
  * the service_role key and is therefore the one place allowed to create
  * accounts, set passwords, and grant Admin permission.
  *
- * This file no longer talks to Google Apps Script despite its name. The move
- * was forced by the corporate network: Azerconnect blocks the
- * `google-app-script-base` application at the proxy, so script.google.com was
- * unreachable for every user and sign-in itself failed with "Unable to reach
- * the authorization service". The Edge Function answers on the same
- * *.supabase.co origin the app already uses for Auth, which the network
- * already permits.
- *
- * It keeps the old file name deliberately so it can be dropped in over the
- * previous js/google.js with NO other change anywhere: the endpoint is
- * derived from CONFIG.SUPABASE_URL rather than read from a new config key, so
- * js/config.js needs no edit, and the three pages that load this file
- * (index.html, admin.html, unauthorized.html) keep working untouched. The
- * tidier version of this same code lives as js/backend.js on the
- * claude/supabase-admin-password-recovery-0wvepq branch, where the file is
- * named for what it actually does; switch to it whenever the repo is updated
- * properly.
+ * Replaces js/google.js, which called a Google Apps Script Web App. Nothing
+ * about the app's shape changed — same function names, same arguments, same
+ * return values — only the host. The move was forced by the corporate
+ * network: Azerconnect blocks the `google-app-script-base` application at
+ * the proxy, so script.google.com was unreachable for every user and sign-in
+ * itself failed with "Unable to reach the authorization service". The Edge
+ * Function answers on the same *.supabase.co origin the app already uses for
+ * Auth, which the network already permits.
  *
  * Exposes:
  *   - getAccessToken() -> the current Supabase session's access token
@@ -42,11 +33,9 @@
 
 /**
  * The deployed Edge Function's URL. Derived from SUPABASE_URL rather than
- * configured separately: every Supabase project serves its functions at the
- * same fixed path, so there is nothing to keep in sync and js/config.js needs
- * no new key. CONFIG.ADMIN_API_URL overrides it if one is present (the
- * updated config.js on the branch sets it) or if the function is ever hosted
- * somewhere else.
+ * configured separately, since every Supabase project serves its functions
+ * at the same fixed path — one less value to keep in sync. CONFIG.ADMIN_API_URL
+ * overrides it if the function is ever hosted somewhere else.
  *
  * @returns {string}
  */

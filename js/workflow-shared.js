@@ -31,6 +31,23 @@ function formatDateTime(isoString) {
   }
 }
 
+/**
+ * The short, human-friendly request identifier shown in every table and in
+ * the exported PDF: "REQ-0001" (request_number, added by
+ * supabase/migrations/0011) instead of the 36-character UUID primary key.
+ * Falls back to the first 8 characters of the UUID if a row has no number
+ * yet (e.g. the migration hasn't been applied), so nothing renders blank.
+ *
+ * @param {{request_number?: number, id?: string}} request
+ * @returns {string} e.g. "REQ-0007"
+ */
+function formatRequestNumber(request) {
+  if (request && request.request_number != null) {
+    return "REQ-" + String(request.request_number).padStart(4, "0");
+  }
+  return request && request.id ? String(request.id).slice(0, 8) : "—";
+}
+
 const HISTORY_ACTION_DESCRIPTIONS = {
   created: "created this request as a draft",
   submitted: "submitted this request",
@@ -126,17 +143,82 @@ function buildReadOnlyVerdictRow(actor, verdict, comment) {
 }
 
 /**
+ * Status cell content for a request row/detail page: the main lifecycle
+ * badge (STATUS_BADGE_VARIANT), plus a small "After OD review" tag when the
+ * request has already been through OD at least once (requests.od_reviewed —
+ * set permanently true the first time a request reaches od_review, see
+ * enforce_request_transition() in supabase/migrations/0003) and is
+ * currently back with the requester. Without this, "Returned to Requester"
+ * looks identical whether it's a first-round HRBP return or a return after
+ * a full HRBP -> OD -> HRBP loop — a real difference the requester and HRBP
+ * both need at a glance. Every other status is already unambiguous on its
+ * own (e.g. "Returned to HRBP" only ever means OD just sent it back) and
+ * gets no tag.
+ *
+ * @param {{status: string, od_reviewed?: boolean}} row
+ * @param {Record<string, string>} labels STATUS_LABELS or MANAGER_STATUS_LABELS
+ * @returns {{text: string, badge: string, secondaryText?: string}}
+ */
+function buildStatusCellValue(row, labels) {
+  const value = { text: labels[row.status] || row.status, badge: STATUS_BADGE_VARIANT[row.status] };
+  if (row.status === "returned_to_requester" && row.od_reviewed) {
+    value.secondaryText = "After OD review";
+  }
+  return value;
+}
+
+/**
+ * Builds a table-cell-ready badge, with an optional small secondary tag
+ * beside it (see buildStatusCellValue()) — the one place that turns a
+ * {text, badge, secondaryText?} value into DOM, shared by admin-table.js's
+ * generic cell renderer and buildReviewMetaBar() below so both look and
+ * behave identically.
+ *
+ * @param {{text: string, badge: string, secondaryText?: string}} value
+ * @returns {HTMLElement}
+ */
+function buildBadgeCell(value) {
+  const wrap = document.createElement("span");
+  wrap.className = "badge-cell";
+
+  const badge = document.createElement("span");
+  badge.className = "badge badge-" + value.badge;
+  badge.textContent = value.text;
+  wrap.appendChild(badge);
+
+  if (value.secondaryText) {
+    const secondary = document.createElement("span");
+    secondary.className = "badge-secondary-tag";
+    secondary.textContent = value.secondaryText;
+    wrap.appendChild(secondary);
+  }
+
+  return wrap;
+}
+
+/**
  * Renders the shared "meta bar" (status / requester / HRBP / submitted /
  * effective date) at the top of a review or view-mode page.
  *
  * @param {object} request
+ * @param {Record<string, string>} [labels] STATUS_LABELS by default — pass
+ *   MANAGER_STATUS_LABELS on the requester's own view mode.
  * @returns {HTMLElement}
  */
-function buildReviewMetaBar(request) {
+function buildReviewMetaBar(request, labels) {
   const metaBar = document.createElement("div");
   metaBar.className = "review-meta-bar";
+
+  const statusItem = document.createElement("div");
+  statusItem.className = "review-meta-item";
+  const statusLabelEl = document.createElement("span");
+  statusLabelEl.className = "review-meta-label";
+  statusLabelEl.textContent = "Status";
+  statusItem.appendChild(statusLabelEl);
+  statusItem.appendChild(buildBadgeCell(buildStatusCellValue(request, labels || STATUS_LABELS)));
+  metaBar.appendChild(statusItem);
+
   [
-    ["Status", STATUS_LABELS[request.status]],
     ["Requester", request.requester_name],
     ["Assigned HRBP", request.hrbp_name],
     ["Submitted", request.submitted_at ? formatDate(request.submitted_at) : "Not yet submitted"],
@@ -157,91 +239,308 @@ function buildReviewMetaBar(request) {
 }
 
 /**
- * A searchable dropdown (text input + filtered option list) for picking one
- * of a fixed set of predefined values — used above a question's textarea
- * wherever the Business Requirements define predefined options for that
- * question, never as a replacement for the textarea itself. The single
- * component every such picker in the app should use, so they all look and
- * behave the same way.
+ * A multi-select option picker for questions that offer predefined options:
  *
- * Selecting an option does not clear/replace anything by itself — the
- * caller's onSelect decides what happens (e.g. create-request.js appends
- * the picked value into the question's textarea, leaving the requester
- * free to edit or add to it).
+ *   1. a searchable dropdown — type to filter, click (or Enter) to tick and
+ *      untick as many options as needed; the list stays open while picking;
+ *   2. a "selected" field directly below it, showing each pick as a chip with
+ *      a remove button;
+ *
+ * The free-text description field is NOT part of this component — the caller
+ * puts its own textarea after it, so the picks and the description are
+ * separate pieces of data.
  *
  * @param {string[]} options
- * @param {{placeholder?: string, onSelect: (value: string) => void}} config
+ * @param {{
+ *   selected?: string[],
+ *   placeholder?: string,
+ *   onChange: (selected: string[]) => void
+ * }} config
  * @returns {HTMLElement}
  */
-function buildSearchableDropdown(options, config) {
+function buildOptionPicker(options, config) {
+  let selected = (config.selected || []).slice();
+  let activeIndex = -1;
+  let visibleOptions = options.slice();
+  const listId = "option-list-" + Math.random().toString(36).slice(2, 9);
+
   const wrap = document.createElement("div");
-  wrap.className = "searchable-dropdown";
+  wrap.className = "option-picker";
+
+  // ----- 1. search / select field -----
+  const searchCaption = document.createElement("p");
+  searchCaption.className = "field-caption";
+  searchCaption.textContent = "Choose from the options (you can select more than one)";
+  wrap.appendChild(searchCaption);
+
+  const searchWrap = document.createElement("div");
+  searchWrap.className = "option-picker-search";
 
   const input = document.createElement("input");
   input.type = "text";
-  input.className = "searchable-dropdown-input";
-  input.placeholder = config.placeholder || "Search predefined options…";
+  input.className = "option-picker-input";
+  input.placeholder = config.placeholder || "Search and select options…";
   input.autocomplete = "off";
   input.setAttribute("role", "combobox");
   input.setAttribute("aria-expanded", "false");
-  wrap.appendChild(input);
+  input.setAttribute("aria-controls", listId);
+  input.setAttribute("aria-autocomplete", "list");
+  searchWrap.appendChild(input);
+
+  const caret = document.createElement("span");
+  caret.className = "option-picker-caret";
+  caret.setAttribute("aria-hidden", "true");
+  searchWrap.appendChild(caret);
 
   const list = document.createElement("ul");
-  list.className = "searchable-dropdown-list hidden";
-  wrap.appendChild(list);
+  list.className = "option-picker-list hidden";
+  list.id = listId;
+  list.setAttribute("role", "listbox");
+  list.setAttribute("aria-multiselectable", "true");
+  searchWrap.appendChild(list);
 
-  function renderList(filterText) {
+  wrap.appendChild(searchWrap);
+
+  // ----- 2. selected options field -----
+  const chipsCaption = document.createElement("p");
+  chipsCaption.className = "field-caption field-caption-spaced";
+  wrap.appendChild(chipsCaption);
+
+  const chipsBox = document.createElement("div");
+  chipsBox.className = "option-chips";
+  chipsBox.setAttribute("aria-live", "polite");
+  wrap.appendChild(chipsBox);
+
+  function notify() {
+    config.onChange(selected.slice());
+  }
+
+  function isSelected(option) {
+    return selected.indexOf(option) !== -1;
+  }
+
+  function toggle(option) {
+    selected = isSelected(option) ? selected.filter((item) => item !== option) : selected.concat(option);
+    renderChips();
+    renderList();
+    notify();
+  }
+
+  function renderChips() {
+    chipsCaption.textContent = selected.length > 0 ? `Selected options (${selected.length})` : "Selected options";
+    chipsBox.innerHTML = "";
+
+    if (selected.length === 0) {
+      const empty = document.createElement("span");
+      empty.className = "option-chips-placeholder";
+      empty.textContent = "No options selected yet";
+      chipsBox.appendChild(empty);
+      return;
+    }
+
+    selected.forEach((option) => {
+      const chip = document.createElement("span");
+      chip.className = "option-chip";
+
+      const label = document.createElement("span");
+      label.textContent = option;
+      chip.appendChild(label);
+
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "option-chip-remove";
+      remove.setAttribute("aria-label", "Remove " + option);
+      remove.textContent = "×";
+      remove.addEventListener("click", () => toggle(option));
+      chip.appendChild(remove);
+
+      chipsBox.appendChild(chip);
+    });
+  }
+
+  function renderList() {
+    const query = input.value.trim().toLowerCase();
+    visibleOptions = query ? options.filter((option) => option.toLowerCase().includes(query)) : options.slice();
+    if (activeIndex >= visibleOptions.length) activeIndex = visibleOptions.length - 1;
     list.innerHTML = "";
-    const query = (filterText || "").trim().toLowerCase();
-    const filtered = query ? options.filter((option) => option.toLowerCase().includes(query)) : options;
 
-    if (filtered.length === 0) {
+    if (visibleOptions.length === 0) {
       const empty = document.createElement("li");
-      empty.className = "searchable-dropdown-empty";
+      empty.className = "option-picker-empty";
       empty.textContent = "No matching options";
       list.appendChild(empty);
       return;
     }
 
-    filtered.forEach((option) => {
+    visibleOptions.forEach((option, index) => {
       const item = document.createElement("li");
-      item.className = "searchable-dropdown-option";
-      item.textContent = option;
-      // mousedown (not click) fires before the input's blur closes the
-      // list, so the selection registers instead of the list vanishing first.
+      item.className = "option-picker-option";
+      item.setAttribute("role", "option");
+      const picked = isSelected(option);
+      item.setAttribute("aria-selected", String(picked));
+      if (picked) item.classList.add("is-selected");
+      if (index === activeIndex) item.classList.add("is-active");
+
+      const box = document.createElement("span");
+      box.className = "option-check";
+      box.setAttribute("aria-hidden", "true");
+      item.appendChild(box);
+
+      const text = document.createElement("span");
+      text.textContent = option;
+      item.appendChild(text);
+
+      // mousedown (not click) fires before the input's blur closes the list,
+      // so the pick registers and the input keeps focus for further picks.
       item.addEventListener("mousedown", (event) => {
         event.preventDefault();
-        input.value = "";
-        closeList();
-        config.onSelect(option);
+        toggle(option);
       });
       list.appendChild(item);
     });
   }
 
   function openList() {
-    renderList(input.value);
+    renderList();
     list.classList.remove("hidden");
     input.setAttribute("aria-expanded", "true");
+    searchWrap.classList.add("is-open");
   }
 
   function closeList() {
     list.classList.add("hidden");
     input.setAttribute("aria-expanded", "false");
+    searchWrap.classList.remove("is-open");
+    activeIndex = -1;
   }
 
   input.addEventListener("focus", openList);
-  input.addEventListener("input", () => renderList(input.value));
+  input.addEventListener("click", () => {
+    if (list.classList.contains("hidden")) openList();
+  });
+  input.addEventListener("input", () => {
+    activeIndex = -1;
+    if (list.classList.contains("hidden")) openList();
+    else renderList();
+  });
   input.addEventListener("blur", () => {
-    setTimeout(closeList, 150); // let a pending option mousedown register first
+    setTimeout(closeList, 120); // let a pending option mousedown register first
+  });
+  caret.addEventListener("mousedown", (event) => {
+    event.preventDefault();
+    if (list.classList.contains("hidden")) {
+      input.focus();
+    } else {
+      closeList();
+    }
   });
   input.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") {
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      if (list.classList.contains("hidden")) openList();
+      if (visibleOptions.length === 0) return;
+      const step = event.key === "ArrowDown" ? 1 : -1;
+      activeIndex = (activeIndex + step + visibleOptions.length) % visibleOptions.length;
+      renderList();
+      const activeItem = list.querySelector(".is-active");
+      if (activeItem) activeItem.scrollIntoView({ block: "nearest" });
+    } else if (event.key === "Enter") {
+      // Never let Enter submit or advance the surrounding form.
+      event.preventDefault();
+      if (activeIndex >= 0 && visibleOptions[activeIndex] !== undefined) toggle(visibleOptions[activeIndex]);
+    } else if (event.key === "Escape") {
       closeList();
       input.blur();
+    } else if (event.key === "Backspace" && input.value === "" && selected.length > 0) {
+      toggle(selected[selected.length - 1]);
     }
   });
 
+  renderChips();
+  return wrap;
+}
+
+/**
+ * Read-only chips for a list of selected options — the display counterpart of
+ * the picker's "selected options" field, used on the review step, the
+ * requester's view mode, the HRBP/OD review pages.
+ *
+ * @param {string[]} options
+ * @returns {HTMLElement}
+ */
+function buildAnswerChips(options) {
+  const row = document.createElement("span");
+  row.className = "answer-chips";
+  options.forEach((option) => {
+    const chip = document.createElement("span");
+    chip.className = "option-chip option-chip-readonly";
+    chip.textContent = option;
+    row.appendChild(chip);
+  });
+  return row;
+}
+
+/**
+ * Fills an element with one answer's content: its selected options as chips,
+ * then its free-text description. Shows an em dash if it has neither.
+ * Older answers (saved before options were stored separately) simply have no
+ * selected options and render as plain text, exactly as before.
+ *
+ * @param {HTMLElement} el
+ * @param {{answer?: string, selected_options?: string[]}} answer
+ */
+function fillAnswerContent(el, answer) {
+  el.textContent = "";
+  const options = (answer && answer.selected_options) || [];
+  const text = ((answer && answer.answer) || "").trim();
+
+  if (options.length === 0 && !text) {
+    el.textContent = "—";
+    return;
+  }
+  if (options.length > 0) el.appendChild(buildAnswerChips(options));
+  if (text) {
+    const description = document.createElement("span");
+    description.className = "answer-description";
+    description.textContent = text;
+    el.appendChild(description);
+  }
+}
+
+/**
+ * Plain-text form of an answer for places that can't render chips (the PDF).
+ *
+ * @param {{answer?: string, selected_options?: string[]}} answer
+ * @returns {string}
+ */
+function formatAnswerPlainText(answer) {
+  const options = (answer && answer.selected_options) || [];
+  const text = ((answer && answer.answer) || "").trim();
+  const parts = [];
+  if (options.length > 0) parts.push("Selected: " + options.join("; "));
+  if (text) parts.push(text);
+  return parts.length > 0 ? parts.join("\n") : "—";
+}
+
+/**
+ * A labelled read-only answer for the requester's review step: same look as
+ * buildReadOnlyParagraph, but showing options as chips plus the description.
+ *
+ * @param {string} label
+ * @param {{answer?: string, selected_options?: string[]}} answer
+ * @returns {HTMLElement}
+ */
+function buildReadOnlyAnswer(label, answer) {
+  const wrap = document.createElement("div");
+  wrap.className = "readonly-paragraph";
+  const labelEl = document.createElement("p");
+  labelEl.className = "readonly-paragraph-label";
+  labelEl.textContent = label;
+  const valueEl = document.createElement("p");
+  valueEl.className = "readonly-paragraph-value";
+  fillAnswerContent(valueEl, answer);
+  wrap.appendChild(labelEl);
+  wrap.appendChild(valueEl);
   return wrap;
 }
 
@@ -277,5 +576,82 @@ function buildApprovalTrailCard(history) {
     list.appendChild(row);
   });
   card.appendChild(list);
+  return card;
+}
+
+
+const VERDICT_OUTCOME_LABELS = {
+  returned_to_requester: "Returned to requester",
+  od_review: "Forwarded to OD",
+};
+
+/**
+ * The "HRBP Review History" card: every answer an HRBP marked insufficient in
+ * an earlier review round — the answer as it stood at that moment, and the
+ * HRBP's comment — grouped by round, oldest first. It's what lets OD (and
+ * anyone else who can see the request) see what was challenged and fixed
+ * before the request got to them, even though the requester's edits replaced
+ * the live answers. Returns null when there's nothing to show.
+ *
+ * @param {Array<{round: number, hrbp_name: string, outcome: string, created_at: string, items: object[]}>} rounds
+ * @returns {HTMLElement | null}
+ */
+function buildVerdictHistoryCard(rounds) {
+  if (!rounds || rounds.length === 0) return null;
+
+  const card = document.createElement("section");
+  card.className = "card";
+  card.appendChild(buildReviewSectionTitle("HRBP Review History"));
+
+  const note = document.createElement("p");
+  note.className = "section-subtitle";
+  note.textContent = "Answers the HRBP marked insufficient in earlier review rounds, shown exactly as they were submitted at the time.";
+  card.appendChild(note);
+
+  rounds.forEach((round) => {
+    const block = document.createElement("div");
+    block.className = "verdict-round";
+
+    const header = document.createElement("div");
+    header.className = "verdict-round-header";
+
+    const title = document.createElement("span");
+    title.className = "verdict-round-title";
+    title.textContent = `Round ${round.round}`;
+    header.appendChild(title);
+
+    const outcome = document.createElement("span");
+    outcome.className = "badge " + (round.outcome === "od_review" ? "badge-info" : "badge-warning");
+    outcome.textContent = VERDICT_OUTCOME_LABELS[round.outcome] || round.outcome;
+    header.appendChild(outcome);
+
+    const meta = document.createElement("span");
+    meta.className = "verdict-round-meta";
+    meta.textContent = `${round.hrbp_name} · ${formatDateTime(round.created_at)}`;
+    header.appendChild(meta);
+
+    block.appendChild(header);
+
+    round.items.forEach((item) => {
+      const itemEl = document.createElement("div");
+      itemEl.className = "verdict-history-item";
+
+      const question = document.createElement("p");
+      question.className = "review-question-text";
+      question.textContent = item.question_text;
+      itemEl.appendChild(question);
+
+      const answer = document.createElement("p");
+      answer.className = "review-answer-text";
+      fillAnswerContent(answer, item);
+      itemEl.appendChild(answer);
+
+      itemEl.appendChild(buildReadOnlyVerdictRow("HRBP", "insufficient", item.comment));
+      block.appendChild(itemEl);
+    });
+
+    card.appendChild(block);
+  });
+
   return card;
 }

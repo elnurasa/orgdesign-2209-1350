@@ -27,7 +27,8 @@ const pageState = {
     justification: "",
     requested_effective_date: "",
     assigned_hrbp_id: "",
-    answers: {}, // question_key -> answer text
+    answers: {}, // question_key -> free-text description
+    selections: {}, // question_key -> predefined options ticked in the picker
   },
   saving: false,
 };
@@ -75,10 +76,13 @@ function hydrateFormFromRequest(request) {
   pageState.form.requested_effective_date = request.requested_effective_date || "";
   pageState.form.assigned_hrbp_id = request.assigned_hrbp_id || "";
   const answers = {};
+  const selections = {};
   request.answers.forEach((answer) => {
     answers[answer.question_key] = answer.answer || "";
+    selections[answer.question_key] = answer.selected_options || [];
   });
   pageState.form.answers = answers;
+  pageState.form.selections = selections;
 }
 
 function showLoadError(message) {
@@ -207,7 +211,7 @@ function buildStep1() {
   const justificationCard = document.createElement("section");
   justificationCard.className = "card";
   const jHeading = document.createElement("h2");
-  jHeading.textContent = "Business Justification";
+  jHeading.textContent = "Business Reason";
   justificationCard.appendChild(jHeading);
 
   const form = document.createElement("div");
@@ -234,7 +238,7 @@ function buildStep1() {
 
   form.appendChild(buildTextareaField({
     id: "field-justification",
-    label: "Justification",
+    label: "Reason",
     required: true,
     minLength: MIN_JUSTIFICATION_LENGTH,
     value: pageState.form.justification,
@@ -341,23 +345,27 @@ function buildQuestionField(question) {
     clearFieldError(wrapper);
   });
 
-  // Predefined options from the Business Requirements' per-question hints
-  // list — a searchable dropdown ABOVE the textarea, never replacing it.
-  // Picking one inserts it into the textarea; the requester still types
-  // their own justification into the same field either way.
+  // Questions with predefined options (the `hints` list in
+  // request-questions.js) get three fields, top to bottom: a searchable
+  // multi-select dropdown, the chips of what's been selected, and the
+  // free-text description. The picks are stored separately from the
+  // description (request_answers.selected_options), never pasted into it.
   if (question.hints && question.hints.length > 0) {
-    const dropdown = buildSearchableDropdown(question.hints, {
-      placeholder: "Search predefined options…",
-      onSelect: (value) => {
-        const current = textarea.value.trim();
-        textarea.value = current ? current.replace(/[.\s]+$/, "") + ". " + value : value;
-        pageState.form.answers[question.key] = textarea.value;
-        updateCharCount(charCount, textarea.value.length);
+    const picker = buildOptionPicker(question.hints, {
+      selected: pageState.form.selections[question.key] || [],
+      onChange: (selected) => {
+        pageState.form.selections[question.key] = selected;
         clearFieldError(wrapper);
-        textarea.focus();
       },
     });
-    wrapper.appendChild(dropdown);
+    wrapper.appendChild(picker);
+
+    const descriptionCaption = document.createElement("p");
+    descriptionCaption.className = "field-caption";
+    descriptionCaption.textContent = "Your description";
+    wrapper.appendChild(descriptionCaption);
+    textarea.rows = 5;
+    textarea.placeholder = "Add details in your own words…";
   }
 
   wrapper.appendChild(textarea);
@@ -406,7 +414,7 @@ function buildStep3() {
   ].forEach(([label, value]) => grid.appendChild(buildReadOnlyKeyValue(label, value)));
   summary.appendChild(grid);
 
-  summary.appendChild(buildReviewSectionTitle("Business Justification"));
+  summary.appendChild(buildReviewSectionTitle("Business Reason"));
   const hrbp = pageState.hrbpOptions.find((h) => h.id === pageState.form.assigned_hrbp_id);
   const justGrid = document.createElement("div");
   justGrid.className = "info-grid";
@@ -417,7 +425,7 @@ function buildStep3() {
   ].forEach(([label, value]) => justGrid.appendChild(buildReadOnlyKeyValue(label, value)));
   summary.appendChild(justGrid);
   summary.appendChild(buildReadOnlyParagraph("Change Description", pageState.form.change_description));
-  summary.appendChild(buildReadOnlyParagraph("Justification", pageState.form.justification));
+  summary.appendChild(buildReadOnlyParagraph("Reason", pageState.form.justification));
 
   fragment.appendChild(summary);
 
@@ -425,7 +433,12 @@ function buildStep3() {
   questionsCard.className = "card";
   questionsCard.appendChild(buildReviewSectionTitle("Questions & Answers"));
   (QUESTION_BANK[pageState.form.category] || []).forEach((question) => {
-    questionsCard.appendChild(buildReadOnlyParagraph(question.text, pageState.form.answers[question.key]));
+    questionsCard.appendChild(
+      buildReadOnlyAnswer(question.text, {
+        answer: pageState.form.answers[question.key],
+        selected_options: pageState.form.selections[question.key],
+      })
+    );
   });
   fragment.appendChild(questionsCard);
 
@@ -618,6 +631,7 @@ function buildAnswersPayload() {
     question_key: question.key,
     question_text: question.text,
     answer: pageState.form.answers[question.key] || "",
+    selected_options: pageState.form.selections[question.key] || [],
     sort_order: index,
   }));
 }
@@ -701,13 +715,13 @@ function renderViewMode() {
   main.className = "request-main review-layout";
 
   const request = pageState.request;
-  main.appendChild(buildReviewMetaBar(request));
+  main.appendChild(buildReviewMetaBar(request, MANAGER_STATUS_LABELS));
 
   const detailsCard = document.createElement("section");
   detailsCard.className = "card";
-  detailsCard.appendChild(buildReviewSectionTitle("Business Justification"));
+  detailsCard.appendChild(buildReviewSectionTitle("Business Reason"));
   detailsCard.appendChild(buildReadOnlyParagraph("Change Description", request.change_description));
-  detailsCard.appendChild(buildReadOnlyParagraph("Justification", request.justification));
+  detailsCard.appendChild(buildReadOnlyParagraph("Reason", request.justification));
   main.appendChild(detailsCard);
 
   const answersCard = document.createElement("section");
@@ -721,7 +735,7 @@ function renderViewMode() {
     questionText.textContent = answer.question_text;
     const answerText = document.createElement("p");
     answerText.className = "review-answer-text";
-    answerText.textContent = answer.answer;
+    fillAnswerContent(answerText, answer);
     answerCard.appendChild(questionText);
     answerCard.appendChild(answerText);
 
@@ -734,6 +748,9 @@ function renderViewMode() {
     answersCard.appendChild(answerCard);
   });
   main.appendChild(answersCard);
+
+  const verdictHistoryCard = buildVerdictHistoryCard(request.verdict_history);
+  if (verdictHistoryCard) main.appendChild(verdictHistoryCard);
 
   main.appendChild(buildApprovalTrailCard(request.history));
 

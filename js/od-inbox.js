@@ -19,7 +19,7 @@ function initOdInboxPage() {
 
   createDataTable(container, {
     columns: [
-      { key: "id", label: "Request ID", sortable: false },
+      { key: "request_number", label: "Request ID", sortable: false },
       { key: "requester_name", label: "Requester", sortable: false },
       { key: "category", label: "Category", sortable: false },
       { key: "status", label: "Status", sortable: false },
@@ -30,8 +30,9 @@ function initOdInboxPage() {
     emptyMessage: "No requests awaiting OD review right now.",
     fetchPage: (params) => listOdInbox({ page: params.page, pageSize: params.pageSize, search: params.search }),
     renderCell: (row, column) => {
+      if (column.key === "request_number") return formatRequestNumber(row);
       if (column.key === "category") return CATEGORY_LABELS[row.category] || row.category;
-      if (column.key === "status") return { text: STATUS_LABELS[row.status], badge: STATUS_BADGE_VARIANT[row.status] };
+      if (column.key === "status") return buildStatusCellValue(row, STATUS_LABELS);
       if (column.key === "requester_name") return row.status === "od_review" ? `New request from ${row.requester_name}` : row.requester_name;
       if (column.key === "submitted_at") return row.submitted_at ? formatDate(row.submitted_at) : "—";
       return row[column.key];

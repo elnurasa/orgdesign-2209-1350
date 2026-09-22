@@ -1,8 +1,16 @@
 /**
  * style.css
  * ---------------------------------------------------------------------------
- * Global styles for the Organizational Design Tool.
- * Covers the login page (glassmorphism card) and shared dashboard styles.
+ * Global design system for the Organizational Design Tool: design tokens,
+ * base typography, the sign-in page, buttons, form controls and utilities.
+ * Every other stylesheet (admin.css, workflow.css, create-request.css)
+ * builds on the tokens defined here.
+ *
+ * Palette is taken straight from the Azerconnect Group logo: a deep navy
+ * (the wordmark) and a dark green (the top-right dot), joined by the same
+ * navy -> green gradient the logo's dot grid uses. Everything else is a
+ * cool, navy-tinted neutral so the brand colours carry the identity and
+ * the content stays easy to read.
  * ---------------------------------------------------------------------------
  */
 
@@ -14,55 +22,126 @@
 }
 
 :root {
-  --color-bg: #f5f7fa;
-  --color-primary: #2f5fed;
-  --color-primary-dark: #1e40c9;
-  --color-text: #1a1f36;
-  --color-text-muted: #6b7280;
-  --color-error: #dc2626;
-  --color-error-bg: #fef2f2;
-  --color-success: #16a34a;
+  /* Brand (sampled from the logo) */
+  --brand-navy: #04407a;
+  --brand-navy-dark: #032e59;
+  --brand-navy-deep: #021f40;
+  --brand-green: #3a7420;
+  --brand-green-light: #8fce5a;
+  --brand-gradient: linear-gradient(90deg, #04407a 0%, #1f5c4b 55%, #3a7420 100%);
+  --brand-gradient-diagonal: linear-gradient(135deg, #04407a 0%, #1f5c4b 55%, #3a7420 100%);
+
+  /* Navy tints (hover / selected / subtle fills) */
+  --navy-50: #f0f5fb;
+  --navy-100: #e1ebf6;
+  --navy-200: #c5d8ec;
+
+  /* Legacy token names — kept so every existing rule and inline
+     var(--color-*) reference keeps working */
+  --color-bg: #f3f6fa;
+  --color-surface: #ffffff;
+  --color-primary: var(--brand-navy);
+  --color-primary-dark: var(--brand-navy-dark);
+  --color-text: #0d2038;
+  --color-text-muted: #52647a;
+  --color-border: #dde5ee;
+  --color-border-strong: #c4d0de;
+  --color-error: #c62828;
+  --color-error-bg: #fdf1f1;
+  --color-success: #2f7a1f;
+  --color-warning: #b45309;
   --color-card-border: rgba(255, 255, 255, 0.4);
-  --radius-lg: 20px;
-  --radius-md: 12px;
-  --shadow-card: 0 20px 60px rgba(31, 45, 90, 0.12);
-  --transition-fast: 0.2s ease;
+
+  --primary-rgb: 4, 64, 122;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+
+  --shadow-sm: 0 1px 2px rgba(4, 32, 64, 0.06), 0 1px 3px rgba(4, 32, 64, 0.05);
+  --shadow-card: 0 1px 2px rgba(4, 32, 64, 0.05), 0 8px 24px -8px rgba(4, 32, 64, 0.12);
+  --shadow-pop: 0 24px 60px -12px rgba(2, 31, 64, 0.35);
+  --focus-ring: 0 0 0 3px rgba(var(--primary-rgb), 0.2);
+
+  --transition-fast: 0.18s ease;
   --transition-medium: 0.4s ease;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
-  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+  font-family: "Inter", "Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
   color: var(--color-text);
   background: var(--color-bg);
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
-/* ---------- Login page layout ---------- */
+::selection {
+  background: rgba(var(--primary-rgb), 0.18);
+}
+
+/* One consistent, clearly visible keyboard focus indicator everywhere */
+:focus-visible {
+  outline: 2px solid var(--brand-navy);
+  outline-offset: 2px;
+}
+
+/* ---------- Sign-in page ---------- */
 .login-page {
+  position: relative;
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px;
   background:
-    radial-gradient(circle at 15% 20%, rgba(47, 95, 237, 0.08), transparent 45%),
-    radial-gradient(circle at 85% 80%, rgba(47, 95, 237, 0.06), transparent 45%),
-    #ffffff;
+    radial-gradient(60% 55% at 92% 100%, rgba(102, 173, 58, 0.34), transparent 70%),
+    radial-gradient(55% 60% at 0% 0%, rgba(31, 108, 190, 0.35), transparent 70%),
+    linear-gradient(135deg, #032e59 0%, #04407a 55%, #0a4a6e 100%);
+  overflow: hidden;
 }
 
-/* ---------- Glassmorphism card ---------- */
+/* Dot grid — echoes the dot-and-line motif of the Azerconnect mark */
+.login-page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.13) 1.6px, transparent 1.8px);
+  background-size: 34px 34px;
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 20%, transparent 78%);
+  mask-image: radial-gradient(ellipse at center, #000 20%, transparent 78%);
+  pointer-events: none;
+}
+
 .login-card {
+  position: relative;
   width: 100%;
-  max-width: 400px;
-  padding: 40px 36px;
-  background: rgba(255, 255, 255, 0.65);
-  border: 1px solid var(--color-card-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  max-width: 420px;
+  padding: 44px 40px 36px;
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow: var(--shadow-pop);
   text-align: center;
+  overflow: hidden;
   animation: card-enter 0.5s ease;
+}
+
+/* Brand gradient strip across the top of the card */
+.login-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--brand-gradient);
 }
 
 @keyframes card-enter {
@@ -76,13 +155,13 @@ body {
   }
 }
 
-/* ---------- Logo placeholder ---------- */
+/* ---------- Logo ---------- */
 .logo-placeholder {
   width: 56px;
   height: 56px;
   margin: 0 auto 20px;
   border-radius: 14px;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  background: var(--brand-gradient-diagonal);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -90,16 +169,16 @@ body {
   font-weight: 700;
   font-size: 20px;
   letter-spacing: 0.5px;
-  box-shadow: 0 8px 20px rgba(47, 95, 237, 0.3);
+  box-shadow: 0 8px 20px rgba(var(--primary-rgb), 0.3);
 }
 
 .login-logo {
   display: block;
   max-width: 220px;
-  max-height: 64px;
+  max-height: 60px;
   width: auto;
   height: auto;
-  margin: 0 auto 20px;
+  margin: 0 auto 22px;
 }
 
 /* Small left-aligned logo used in dashboard/admin topbars — per standard
@@ -107,18 +186,21 @@ body {
    left-aligned like every other left-to-right product header. */
 .topbar-logo {
   display: block;
-  height: 28px;
+  height: 30px;
   width: auto;
 }
 
 .login-card h1 {
   font-size: 22px;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--brand-navy);
   margin-bottom: 6px;
 }
 
 .login-card p.subtitle {
-  font-size: 14px;
+  font-size: 14.5px;
+  line-height: 1.5;
   color: var(--color-text-muted);
   margin-bottom: 28px;
 }
@@ -133,8 +215,8 @@ body {
   display: block;
   font-size: 13px;
   font-weight: 600;
-  color: var(--color-text-muted);
-  margin-bottom: 6px;
+  color: var(--color-text);
+  margin-bottom: 7px;
 }
 
 .form-group input[type="email"],
@@ -142,20 +224,31 @@ body {
 .form-group input[type="text"] {
   width: 100%;
   padding: 12px 14px;
-  font-size: 14px;
+  font-size: 15px;
+  font-family: inherit;
   color: var(--color-text);
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid #d9dee8;
+  background: #ffffff;
+  border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-md);
   outline: none;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
+.form-group input::placeholder {
+  color: #8a9ab0;
+}
+
+.form-group input[type="email"]:hover,
+.form-group input[type="password"]:hover,
+.form-group input[type="text"]:hover {
+  border-color: #a9b9cc;
+}
+
 .form-group input[type="email"]:focus,
 .form-group input[type="password"]:focus,
 .form-group input[type="text"]:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(47, 95, 237, 0.15);
+  border-color: var(--brand-navy);
+  box-shadow: var(--focus-ring);
 }
 
 /* Password field with an inline show/hide toggle icon */
@@ -164,19 +257,19 @@ body {
 }
 
 .password-field input {
-  padding-right: 44px; /* room for the toggle icon */
+  padding-right: 46px; /* room for the toggle icon */
 }
 
 .password-toggle {
   position: absolute;
   top: 50%;
-  right: 10px;
+  right: 8px;
   transform: translateY(-50%);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   padding: 0;
   background: transparent;
   border: none;
@@ -187,8 +280,8 @@ body {
 }
 
 .password-toggle:hover {
-  color: var(--color-text);
-  background: rgba(47, 95, 237, 0.08);
+  color: var(--brand-navy);
+  background: var(--navy-50);
 }
 
 .password-toggle svg {
@@ -216,38 +309,74 @@ body {
   color: var(--color-error);
 }
 
-/* ---------- Sign in button ---------- */
+/* ---------- Buttons ---------- */
 .btn-primary {
   position: relative;
   width: 100%;
-  padding: 13px 16px;
+  padding: 13px 18px;
   font-size: 15px;
   font-weight: 600;
+  font-family: inherit;
+  letter-spacing: 0.005em;
   color: #ffffff;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
-  border: none;
+  background: var(--brand-navy);
+  border: 1px solid var(--brand-navy-dark);
   border-radius: var(--radius-md);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  transition: transform var(--transition-fast), box-shadow var(--transition-fast), opacity var(--transition-fast);
-  box-shadow: 0 10px 24px rgba(47, 95, 237, 0.28);
+  transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast), opacity var(--transition-fast);
+  box-shadow: 0 1px 2px rgba(3, 46, 89, 0.3), 0 6px 14px -6px rgba(var(--primary-rgb), 0.55);
 }
 
 .btn-primary:hover:not(:disabled) {
+  background: #05509a;
   transform: translateY(-1px);
-  box-shadow: 0 14px 28px rgba(47, 95, 237, 0.34);
+  box-shadow: 0 1px 2px rgba(3, 46, 89, 0.3), 0 10px 20px -8px rgba(var(--primary-rgb), 0.6);
 }
 
 .btn-primary:active:not(:disabled) {
+  background: var(--brand-navy-dark);
   transform: translateY(0);
 }
 
+.btn-primary:focus-visible {
+  outline: 2px solid var(--brand-navy);
+  outline-offset: 2px;
+}
+
 .btn-primary:disabled {
-  opacity: 0.75;
+  color: rgba(255, 255, 255, 0.85);
+  background: #b7c2d1;
+  border-color: #b7c2d1;
+  box-shadow: none;
+  opacity: 1;
   cursor: not-allowed;
+}
+
+.btn-secondary {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--brand-navy);
+  background: #ffffff;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.btn-secondary:hover {
+  background: var(--navy-50);
+  border-color: var(--navy-200);
+}
+
+.btn-secondary:active {
+  transform: translateY(1px);
 }
 
 /* ---------- Loading spinner ---------- */
@@ -283,12 +412,13 @@ body {
 /* ---------- Error component ---------- */
 .error-message {
   margin-top: 16px;
-  padding: 10px 14px;
-  font-size: 13px;
+  padding: 11px 14px;
+  font-size: 13.5px;
   font-weight: 500;
   color: var(--color-error);
   background: var(--color-error-bg);
-  border: 1px solid rgba(220, 38, 38, 0.2);
+  border: 1px solid rgba(198, 40, 40, 0.22);
+  border-left: 3px solid var(--color-error);
   border-radius: var(--radius-md);
   text-align: left;
 }
@@ -310,7 +440,8 @@ body {
 
 .footer-note {
   margin-top: 24px;
-  font-size: 12px;
+  font-size: 12.5px;
+  line-height: 1.5;
   color: var(--color-text-muted);
 }
 
@@ -335,23 +466,6 @@ body {
   margin-bottom: 24px;
 }
 
-.btn-secondary {
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--color-primary);
-  background: #ffffff;
-  border: 1px solid #d9dee8;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: background var(--transition-fast), transform var(--transition-fast);
-}
-
-.btn-secondary:hover {
-  background: #f5f7fa;
-  transform: translateY(-1px);
-}
-
 .dashboard-actions {
   display: flex;
   align-items: center;
@@ -370,6 +484,16 @@ body {
 /* ---------- Responsive ---------- */
 @media (max-width: 480px) {
   .login-card {
-    padding: 32px 24px;
+    padding: 36px 24px 28px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
